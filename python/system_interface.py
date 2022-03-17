@@ -5,6 +5,7 @@ connected.
 """
 import subprocess
 import time
+from enum import Enum
 import RPi.GPIO as gpio
 
 
@@ -54,6 +55,19 @@ class GPIOController:
         gpio.output(self.pin, gpio.HIGH if state else gpio.LOW)
 
 
+class ADS1115Range(Enum):
+    """
+    This represents a full-scale voltage range for the 
+    ADS1115 ADC IC.
+    """
+    0_256V = 0
+    0_512V = 1
+    1_024V = 2
+    2_048V = 3
+    4_096V = 4
+    6_144V = 5
+
+
 class ADCController:
     """
     This class represents an interface to the ADS1115
@@ -61,8 +75,29 @@ class ADCController:
     in a Rust driver, this just wraps the ouputs of that 
     driver to be used in Python.
     """
-    def __init__(self):
-        self.dummy = True
+    def __init__(self, channel_count=4, inital_range=ADS1115Range.6_144V):
+        self.channel_count = channel_count
+        self.fsr = initial_range
+
+    def set_full_scale_range(self, fsr):
+        """
+        This sets the full scale range to use when making
+        measurements.
+        Args:
+            fsr: ADS1115Range enum representing deisred range
+        """
+        self.fsr = fsr
+
+    def get_channel_reading(self, channel):
+        """
+        Reads a channel from the ADC using the 
+        pre-specified full scale range.
+        Args:
+            channel: 0-3, the channel to read from
+        """
+        command = '~/Code/verdant/rust/verdant-drivers/target/release/verdant-drivers {} {}'.format(channel, self.fsr.value)
+        response = execute_command(command)
+        return float(response)
 
 
 class HumiditySensor:
