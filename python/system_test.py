@@ -28,8 +28,8 @@ print('Approximate CO2 PPM: {}'.format(co2_ppm))
 # ADC Test
 print('Testing ADC connection.')
 adc = system_interface.ADCController()
-adc.set_full_scale_range(ADS1115Range.6_144V)
+adc.set_full_scale_range(ADS1115Range.Range6_144V)
 for i in range(4):
     reading = adc.get_channel_reading(i)
-    print('Channel {} reading: {}'.format)
+    print('Channel {} reading: {}'.format(i, reading))
 

@@ -60,12 +60,12 @@ class ADS1115Range(Enum):
     This represents a full-scale voltage range for the 
     ADS1115 ADC IC.
     """
-    0_256V = 0
-    0_512V = 1
-    1_024V = 2
-    2_048V = 3
-    4_096V = 4
-    6_144V = 5
+    Range0_256V = 0
+    Range0_512V = 1
+    Range1_024V = 2
+    Range2_048V = 3
+    Range4_096V = 4
+    Range6_144V = 5
 
 
 class ADCController:
@@ -75,7 +75,7 @@ class ADCController:
     in a Rust driver, this just wraps the ouputs of that 
     driver to be used in Python.
     """
-    def __init__(self, channel_count=4, inital_range=ADS1115Range.6_144V):
+    def __init__(self, channel_count=4, initial_range=ADS1115Range.Range6_144V):
         self.channel_count = channel_count
         self.fsr = initial_range
 
@@ -95,7 +95,7 @@ class ADCController:
         Args:
             channel: 0-3, the channel to read from
         """
-        command = '~/Code/verdant/rust/verdant-drivers/target/release/verdant-drivers {} {}'.format(channel, self.fsr.value)
+        command = '~/Code/verdant/rust/ads1115-driver/target/release/ads1115-driver {} {}'.format(channel, self.fsr.value)
         response = execute_command(command)
         return float(response)
 
