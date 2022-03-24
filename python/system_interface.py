@@ -5,8 +5,12 @@ connected.
 """
 import subprocess
 import time
+import datetime
+import os
+import csv
 from enum import Enum
 import RPi.GPIO as gpio
+import serial
 
 
 def execute_command(command):
@@ -100,6 +104,90 @@ class ADCController:
         return float(response)
 
 
+class ConductivitySensor:
+    """
+    This class interfaces with an Atlas Scientific 
+    conductivity sensor.
+    """
+    def __init__(self, serial_path, k_val=0.1, timeout=1.0):
+        self.k_val = k_val
+        self.ser = serial.Serial(serial_path,
+                                 timeout=timeout)
+        self.set_sensitivity_value(self.k_val)
+
+        # Let's disable continuous reads by default
+        self.set_continuous_read_state(False)
+
+    def _write_to_device(self, write_string):
+        """
+        This writes to the device via its serial port.
+        A CR is appended to the end of the write string
+        via this method.
+        Args:
+            write_string: String to write to device
+        """
+        self.ser.write(bytes('{}\r'.format(write_string), 
+                       'utf8'))
+
+    def _read_from_device(self):
+        """
+        This reads from the device up to the standard 
+        timeout period. This is a blocking method during
+        that time.
+        Returns:
+            String responses from the device in array form.
+        """
+        # Let's set a large buffer size and split the response
+        return self.ser.read(10000).decode().strip().split('\r')
+
+    def write_and_read_response(self, write_string):
+        """
+        This writes a string to the device and reads 
+        any response if may return. It removes any confirmation
+        (ie *OK) responses for simplicity.
+        Args:
+            write_string: String to write to the device
+        Returns:
+            String responses from the device in array form.
+        """
+        self._write_to_device(write_string)
+        response = self._read_from_device()
+        if '*OK' in response:
+            response.remove('*OK')
+
+        return response
+    
+    def set_sensitivity_value(self, k_val):
+        """
+        Sets the sensitivty of the sensor.
+        """
+        response = self.write_and_read_response('K,{}'.format(k_val))
+
+    def set_continuous_read_state(self, read_continuously):
+        """
+        This turns on or off continuous reading on the device.
+        Args:
+            read_continuously: bool of the desired read state
+        """
+        rate = '1' if read_continuously else '0'
+        response = self.write_and_read_response('C,{}'.format(rate))
+
+    def get_conductivity(self):
+        """
+        This gets the conductivity as measured by the sensor.
+        Returns:
+            A float value of the conductivity as read by the sensor
+        """
+        response = self.write_and_read_response('R')
+        return float(response[0])
+
+    def close_connection(self):
+        """
+        This closes the serial connection to the device.
+        """
+        self.ser.close()
+
+
 class HumiditySensor:
     """
     This class represents an interface to the humidity 
@@ -135,3 +223,41 @@ class CO2Sensor:
         response = execute_command(command)
         return float(response)
 
+
+class GPIOFrequencyCounter:
+    """
+    This class runs some threads in the background to 
+    count rising edges on a hardware GPIO with the 
+    intention of determining frequency.
+    """
+    def _init__(self, pin):
+        gpio.setup(pin, )
+        self.pin = pin
+        self.counts = 0
+        self.counting = False
+    
+    def begin_counting(self):
+        """
+        This will begin the counting process for the 
+        hardware pin.
+        """
+        return 0
+
+
+class StateLogger:
+    """
+    This is a small class that will log sensor measurements
+    and the time they were taken to a CSV file.
+    """
+    def __init__(self, log_dir):
+        time_str = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
+        filename = 'verdant_log_{}.txt'.format(time_str)
+        filepath = os.path.join(log_dir, filename)
+        self.log_file = open(filepath, 'w')
+        self.writer = csv.writer(self.log_file)
+        fields = ['Time', 'CO2 (ppm)', 'Conductivity (us/cm)']
+        self.writer.writerow(fields)
+
+    def log_values(self, co2, conductivity):
+        current_time = str(datetime.datetime.now())
+        self.writer.writerow([current_time, co2, conductivity])
