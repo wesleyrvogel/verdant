@@ -13,16 +13,31 @@ for pin in [37, 35, 33, 31]:
 
 valve = system_interface.GPIOController(29)
 
+"""
+for period in [0.1, 0.5, 1, 1.5, 2]:
+    peristaltics[0].set_state(True)
+    time.sleep(period)
+    peristaltics[0].set_state(False)
+    time.sleep(5)
+"""
+
 for pump in peristaltics:
     pump.set_state(True)
     time.sleep(3)
     pump.set_state(False)
 
+valve.set_state(True)
+time.sleep(4)
+valve.set_state(False)
+time.sleep(4)
+
+valve.set_state(True)
 for pump in peristaltics:
     pump.set_state(True)
 
 time.sleep(5)
 
+valve.set_state(False)
 for pump in peristaltics:
     pump.set_state(False)
 
