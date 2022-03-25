@@ -82,7 +82,7 @@ while not errored:
         co2 = co2_sensor.get_co2_concentration()
         ph = get_ph_reading()
         foam_conductivity = get_foam_conductivity_reading()
-        logger.log_values(co2, conductivity)
+        logger.log_values(co2, conductivity, ph, foam_conductivity)
 
         # Determine what hardware needs to be actuated
         print('Conductivity: {} us/cm'.format(conductivity))

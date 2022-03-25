@@ -255,9 +255,9 @@ class StateLogger:
         filepath = os.path.join(log_dir, filename)
         self.log_file = open(filepath, 'w')
         self.writer = csv.writer(self.log_file)
-        fields = ['Time', 'CO2 (ppm)', 'Conductivity (us/cm)']
+        fields = ['Time', 'CO2 (ppm)', 'Conductivity (us/cm)', 'pH (V)', 'Foam Conductivity (V)']
         self.writer.writerow(fields)
 
-    def log_values(self, co2, conductivity):
+    def log_values(self, co2, conductivity, ph, foam_conductivity):
         current_time = str(datetime.datetime.now())
-        self.writer.writerow([current_time, co2, conductivity])
+        self.writer.writerow([current_time, co2, conductivity, ph, foam_conductivity])
